@@ -10,11 +10,19 @@ from pathlib import Path
 app = Dash(__name__)
 
 # App layout
-app.layout = html.Div([
-    html.Div(children='input journal entry'),
-    dcc.Input(id='input_journal_entry', placeholder='Enter journal entry', type='text', debounce=True),
-    html.Br(),
-    html.Div(id='output_journal_entry')
+app.layout = html.Div(
+    id = "app_container",
+    children = [
+        html.Div(
+            id = "banner",
+            className = "banner",
+            children = [html.Img(src=app.get_asset_url("uva_logo.png"),
+                                 style={'height':'4%', 'width':'4%'})]
+            ),
+        html.Div(children='input journal entry'),
+        dcc.Input(id='input_journal_entry', placeholder='Enter journal entry', type='text', debounce=True),
+        html.Br(),
+        html.Div(id='output_journal_entry')
 ])
 
 # Callbacks
