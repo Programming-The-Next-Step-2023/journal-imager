@@ -22,8 +22,12 @@ app.layout = html.Div([
     Output(component_id='output_journal_entry', component_property='children'),
     Input(component_id='input_journal_entry', component_property='value')
 )
-uj.update_journal(input_text)
+def update_journal(input_text):
+    
+    # Call journal update function
+    output_text = uj.update_journal(input_text)
+    return output_text
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)

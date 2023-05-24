@@ -23,12 +23,12 @@ def update_journal(input_text):
 
     # Write time and input text to journal_entries file
     today_entries = today_entries_dir / 'entries.txt'
-    # current_time = datetime.now().strftime('%H:%M:%S')
+    current_time = datetime.now().strftime('%H:%M:%S')
 
-    try:
+    if input_text is not None:
         with open(today_entries, 'a') as f:
-            f.write(input_text + '\n' + '\n')
-    except TypeError as te:
+            f.write(current_time + '\n' + input_text + '\n' + '\n')
+    else:
         pass
 
     return f'Output: {input_text}'
