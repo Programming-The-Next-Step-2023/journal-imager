@@ -68,15 +68,14 @@ app.layout = html.Div(
             ]
         ),
         dash_table.DataTable(
-            id = 'table'
-
+            id = 'entries_table'
         ),
-        html.Div(id='output_journal_entry')
-])
+    ]
+)
 
 # Callbacks
 @callback(
-    Output(component_id='table', component_property='data'),
+    Output(component_id='entries_table', component_property='data'),
     Input(component_id='input_journal_entry', component_property='value')
 )
 def update_journal(input_text, entries_path = entries_path):
@@ -84,16 +83,6 @@ def update_journal(input_text, entries_path = entries_path):
     # Call journal update function
     entries_dict = uj.update_journal(input_text, entries_path)
     return entries_dict
-    # return html.Table([
-    #     html.Thead(
-    #         html.Tr([html.Th(col) for col in entries_df.columns])
-    #     ),
-    #     html.Tbody([
-    #         html.Tr([
-    #             html.Td(entries_df.iloc[i][col]) for col in entries_df.columns
-    #         ]) for i in range(min(len(entries_df), max_rows))
-    #     ])
-    # ])
 
 # Run the app
 if __name__ == '__main__':
