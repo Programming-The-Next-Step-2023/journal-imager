@@ -2,6 +2,7 @@ import pandas as pd
 
 from pathlib import Path
 from datetime import datetime
+import warnings
 
 def update_journal(input_text, entries_path):
     """ Update journal entries with input text.
@@ -29,12 +30,14 @@ def update_journal(input_text, entries_path):
     # Write input text to journal_entries file
     if input_text is not None and len(input_text) >= 1:  # Check for empty input
         try:
-            df = pd.read_csv(today_entries)
+            warnings.warn('This is a warning')
+            df = pd.read_csv(today_entries, sep=';')
             df.loc[len(df)] = {'time': current_time, 'entry': input_text}
-        except NameError:
+        except FileNotFoundError:
+            warnings.warn('This is a warning, too')
             df = pd.DataFrame({'time': current_time, 'entry': input_text}, index=[0])
         finally:
-            df.to_csv(today_entries, index=False)
+            df.to_csv(today_entries, index=False, sep=';')
     else:
         pass
 
