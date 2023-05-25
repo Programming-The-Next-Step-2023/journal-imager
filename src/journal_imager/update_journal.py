@@ -1,3 +1,5 @@
+import pandas as pd
+
 from pathlib import Path
 from datetime import datetime
 
@@ -18,13 +20,22 @@ def update_journal(input_text, entries_path):
     today_entries_dir.mkdir(exist_ok=True)
 
     # Write time and input text to journal_entries file
-    today_entries = today_entries_dir / 'entries.txt'
+    today_entries = today_entries_dir / 'entries.csv'
     current_time = datetime.now().strftime('%H:%M:%S')
 
-    if input_text is not None and len(input_text) >= 1:
-        with open(today_entries, 'a') as f:
-            f.write(current_time + '\n' + input_text + '\n' + '\n')
+    # Initialize empty dataframe
+    df = pd.DataFrame(columns=['time', 'entry'])
+
+    # Write input text to journal_entries file
+    if input_text is not None and len(input_text) >= 1:  # Check for empty input
+        try:
+            df = pd.read_csv(today_entries)
+            df.loc[len(df)] = {'time': current_time, 'entry': input_text}
+        except NameError:
+            df = pd.DataFrame({'time': current_time, 'entry': input_text}, index=[0])
+        finally:
+            df.to_csv(today_entries, index=False)
     else:
         pass
 
-    return f'Output: {input_text}'
+    return df.to_dict('records')

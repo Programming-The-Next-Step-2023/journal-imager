@@ -1,7 +1,7 @@
 # Import packages
 import src.journal_imager.update_journal as uj
 
-from dash import Dash, html, dcc, callback, Input, Output
+from dash import Dash, html, dcc, callback, Input, Output, dash_table
 from datetime import datetime
 from pathlib import Path
 
@@ -67,19 +67,33 @@ app.layout = html.Div(
                 )
             ]
         ),
+        dash_table.DataTable(
+            id = 'table'
+
+        ),
         html.Div(id='output_journal_entry')
 ])
 
 # Callbacks
 @callback(
-    Output(component_id='output_journal_entry', component_property='children'),
+    Output(component_id='table', component_property='data'),
     Input(component_id='input_journal_entry', component_property='value')
 )
 def update_journal(input_text, entries_path = entries_path):
     
     # Call journal update function
-    output_text = uj.update_journal(input_text, entries_path)
-    return output_text
+    entries_dict = uj.update_journal(input_text, entries_path)
+    return entries_dict
+    # return html.Table([
+    #     html.Thead(
+    #         html.Tr([html.Th(col) for col in entries_df.columns])
+    #     ),
+    #     html.Tbody([
+    #         html.Tr([
+    #             html.Td(entries_df.iloc[i][col]) for col in entries_df.columns
+    #         ]) for i in range(min(len(entries_df), max_rows))
+    #     ])
+    # ])
 
 # Run the app
 if __name__ == '__main__':
