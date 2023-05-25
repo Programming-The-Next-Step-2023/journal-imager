@@ -9,19 +9,64 @@ from pathlib import Path
 # Initialize the app
 app = Dash(__name__)
 
+# Paths
+base_path = Path(__file__).parent
+entries_path = base_path / 'journal_entries'
+entries_path.mkdir(exist_ok=True)
+
+
 # App layout
 app.layout = html.Div(
     id = "app_container",
     children = [
         html.Div(
             id = "banner",
-            className = "banner",
-            children = [html.Img(src=app.get_asset_url("uva_logo.png"),
-                                 style={'height':'4%', 'width':'4%'})]
-            ),
-        html.Div(children='input journal entry'),
-        dcc.Input(id='input_journal_entry', placeholder='Enter journal entry', type='text', debounce=True),
-        html.Br(),
+            children = [
+                html.Img(
+                    src = app.get_asset_url("uva_logo.png"),
+                    style = {'height':'4%', 'width':'4%'}
+                )
+            ]
+        ),
+        html.Div(
+            id = "left-column",
+            children = [
+                html.Div(
+                    id = "app_info",
+                    children = [
+                        html.H3("Journal Imager"),
+                        html.P("This app allows you to write journal entries \n and view them as weird images."),
+                        html.P("Enter your journal entry below and press enter to submit."),
+                        html.Div(
+                            id = "inputter",
+                            children = [
+                                dcc.Input(
+                                    id = 'input_journal_entry',
+                                    type = 'text',
+                                    placeholder = 'Enter journal entry',
+                                    debounce = True,
+                                    style = {'width':'10%'}
+                                ),
+                            ],
+                            # style = dict(display='flex', justifyContent='center')
+                        ),
+                    html.Br(),
+                    html.Br(),
+                    ]
+                ),
+                html.Div(
+                    id = "user_controls",
+                    children = [
+                        html.P("Select date(s) to view journal entries."),
+                        dcc.DatePickerRange(
+                            id = "date_picker",
+                            start_date = datetime(2023, 5, 17).strftime('%Y-%m-%d'),
+                            end_date = datetime.now().strftime('%Y-%m-%d'),
+                        )
+                    ]
+                )
+            ]
+        ),
         html.Div(id='output_journal_entry')
 ])
 
@@ -30,10 +75,10 @@ app.layout = html.Div(
     Output(component_id='output_journal_entry', component_property='children'),
     Input(component_id='input_journal_entry', component_property='value')
 )
-def update_journal(input_text):
+def update_journal(input_text, entries_path = entries_path):
     
     # Call journal update function
-    output_text = uj.update_journal(input_text)
+    output_text = uj.update_journal(input_text, entries_path)
     return output_text
 
 # Run the app
