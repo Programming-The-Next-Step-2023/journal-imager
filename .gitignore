@@ -2,3 +2,5 @@
 .DS_Store
 *.pyc
 *.csv
+*.txt
+*.word2vec

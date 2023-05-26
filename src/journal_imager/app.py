@@ -1,10 +1,13 @@
 # Import packages
 import src.journal_imager.update_journal as uj
+import pandas as pd
+import warnings
+import re
 
 from dash import Dash, html, dcc, callback, Input, Output, dash_table
 from datetime import datetime
 from pathlib import Path
-
+from natsort import natsorted
 
 # Initialize the app
 app = Dash(__name__)
@@ -13,6 +16,11 @@ app = Dash(__name__)
 base_path = Path(__file__).parent
 entries_path = base_path / 'journal_entries'
 entries_path.mkdir(exist_ok=True)
+
+# Create today's entries directory
+current_date = datetime.now().strftime('%Y-%m-%d')
+today_entries_dir = entries_path / current_date
+today_entries_dir.mkdir(exist_ok=True)
 
 
 # App layout
@@ -39,7 +47,7 @@ app.layout = html.Div(
             style={'display': 'flex', 'flex-direction': 'row', 'height': '90%'},
             children=[
                 html.Div(
-                    id = "left-column",
+                    id = "left_column",
                     style={'width': '30%', 'margin-right': '10px'},
                     children = [
                         html.Div(
@@ -56,6 +64,7 @@ app.layout = html.Div(
                                             type = 'text',
                                             placeholder = 'Enter journal entry',
                                             debounce = True,
+                                            disabled = False,
                                             style = {'width':'98%'}
                                         )
                                     ]
@@ -64,12 +73,30 @@ app.layout = html.Div(
                         ),
                         html.Div(
                             id = "user_controls",
+                            style = {'width':'25%'},
                             children = [
-                                html.P("Select date(s) to view journal entries."),
-                                dcc.DatePickerRange(
-                                    id = "date_picker",
-                                    start_date = datetime(2023, 5, 17).strftime('%Y-%m-%d'),
-                                    end_date = datetime.now().strftime('%Y-%m-%d'),
+                                html.P("Select Date:"),
+                                dcc.Dropdown(
+                                    id = "date_select",
+                                    # Get list of all paths in entries_path, then get the last directory in each path,
+                                    # which is the date, which becomes the label and value for the dropdown
+                                    options = [{"label": date, "value": date} for date in \
+                                               natsorted([re.search(r"/([^/]+)$", str(path)).group(1) \
+                                                          for path in entries_path.iterdir() if path.is_dir()],
+                                                          reverse=True)],
+                                    value = datetime.now().strftime('%Y-%m-%d'),
+                                    clearable = False
+                                ),
+                                html.Br(),
+                            ]
+                        ),
+                        html.Div(
+                            id = "image_controls",
+                            children=[
+                                html.P("Image Controls:"),
+                                html.Button(
+                                    id = "generate_button",
+                                    children = "Generate",
                                 )
                             ]
                         )
@@ -91,17 +118,48 @@ app.layout = html.Div(
     ]
 )
 
-# Callbacks
+## Callbacks
+# Update journal entries table with today's entries
 @callback(
     Output(component_id='entries_table', component_property='data'),
-    Input(component_id='input_journal_entry', component_property='value')
+    Input(component_id='input_journal_entry', component_property='value'),
+    Input(component_id='date_select', component_property='value')
 )
-def update_journal(input_text, entries_path = entries_path):
+def update_journal(input_text, date_select, entries_path = entries_path):
     
-    # Call journal update function
-    entries_dict = uj.update_journal(input_text, entries_path)
+    # If date is today, use update_journal function
+    if date_select == datetime.now().strftime('%Y-%m-%d'):
+        entries_dict = uj.update_journal(input_text, entries_path)
+    else:
+        date_select_entries = entries_path / date_select / 'entries.csv'
+        df = pd.read_csv(date_select_entries, sep=',')
+        entries_dict = df.to_dict('records')
+
     return entries_dict
+
+
+# Disable input box if date is not today
+@callback(
+    Output(component_id='input_journal_entry', component_property='disabled'),
+    Input(component_id='date_select', component_property='value')
+)
+def button_on_off(date_select):
+    if date_select == datetime.now().strftime('%Y-%m-%d'):
+        warnings.warn("ENABLED")
+        return False
+    else:
+        warnings.warn("DISABLED")
+        return True
+
 
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=False)
+
+# Get list of all directories in entries_path
+clinic_list = [x for x in entries_path.iterdir() if x.is_dir()]
+match = [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]
+
+# Get list of all directories in entries_path, then get the last directory in each path,
+# which is the date, which becomes the label and value for the dropdown
+[{"label": i, "value": i} for i in [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]]

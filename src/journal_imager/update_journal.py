@@ -12,9 +12,11 @@ def update_journal(input_text, entries_path):
         entries_path (str): Path to journal entries directory.
 
     Returns:
-        str: Output text to be displayed on the app.
+        dict: Dictionary of today's entries.
     """
     
+    warnings.warn('update journal')
+
     # Get today's date to organize entries
     current_date = datetime.now().strftime('%Y-%m-%d')
     today_entries_dir = entries_path / current_date
@@ -27,18 +29,27 @@ def update_journal(input_text, entries_path):
     # Initialize empty dataframe
     df = pd.DataFrame(columns=['time', 'entry'])
 
-    # Write input text to journal_entries file
-    if input_text is not None and len(input_text) >= 1:  # Check for empty input
-        try:
-            warnings.warn('This is a warning')
-            df = pd.read_csv(today_entries, sep=';')
-            df.loc[len(df)] = {'time': current_time, 'entry': input_text}
-        except FileNotFoundError:
-            warnings.warn('This is a warning, too')
-            df = pd.DataFrame({'time': current_time, 'entry': input_text}, index=[0])
-        finally:
-            df.to_csv(today_entries, index=False, sep=';')
-    else:
-        pass
+    # Read in today's entries
+    try:
+        df = pd.read_csv(today_entries)
+    except FileNotFoundError:
+        df = pd.DataFrame({'time': current_time, 'entry': "No entries yet - add your first entry for today!"}, index=[0])
+
+    # Check if input text is empty
+    if input_text is None or len(input_text) < 1:  # Check for empty input
+        return df.to_dict('records')
+
+    # Check if input text is the same as the last entry
+    if input_text == df['entry'].iloc[-1]:
+        return df.to_dict('records')
+
+    # Write to journal entries file
+    try:
+        df = pd.read_csv(today_entries)
+        df.loc[len(df)] = {'time': current_time, 'entry': input_text}
+    except FileNotFoundError:
+        df = pd.DataFrame({'time': current_time, 'entry': input_text}, index=[0])
+    finally:
+        df.to_csv(today_entries, index=False)
 
     return df.to_dict('records')
