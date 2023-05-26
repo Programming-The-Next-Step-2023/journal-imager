@@ -1,13 +1,16 @@
 # Import packages
-import src.journal_imager.update_journal as uj
 import pandas as pd
 import warnings
 import re
 
-from dash import Dash, html, dcc, callback, Input, Output, dash_table
+from dash import Dash, html, dcc, callback, Input, Output, State, dash_table
 from datetime import datetime
 from pathlib import Path
 from natsort import natsorted
+
+import src.journal_imager.update_journal as uj
+import src.journal_imager.load_glove as lg
+
 
 # Initialize the app
 app = Dash(__name__)
@@ -111,8 +114,13 @@ app.layout = html.Div(
                             style_data={'whiteSpace': 'normal', 'height': 'auto'},
                             style_cell={'textAlign': 'left'},
                         ),
+                        html.Img(
+                            id = "gen_image",
+                            src = app.get_asset_url("uva_logo.png"),
+                            style = {'maxHeight':'100%', 'maxWidth':'100%'}
+                        )
                     ]
-                )
+                ),
             ]
         )
     ]
@@ -151,15 +159,47 @@ def button_on_off(date_select):
         warnings.warn("DISABLED")
         return True
 
+# Generate image
+@callback(
+    Output(component_id='gen_image', component_property='src'),
+    [
+    Input(component_id='generate_button', component_property='n_clicks'),
+    Input(component_id='entries_table', component_property='data')
+    ]
+)
+def generate_image(n_clicks, entries_table):
+    # Load the model
+    try:
+        model.most_similar('hello')
+    except NameError:
+        warnings.warn("Loading model...")
+        model = lg.load_glove()
+
+    warnings.warn("Generating image...")
+    
+    # warnings.warn(type(entries_table).__name__)
+
+    # troy = list(entries_table[0].values())
+    # warnings.warn(str(troy[0]))
+
+    # Get the text from the entries table
+
+    # Get most surprising words
+
+    # Generate image
 
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=False)
 
-# Get list of all directories in entries_path
-clinic_list = [x for x in entries_path.iterdir() if x.is_dir()]
-match = [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]
+# # Get list of all directories in entries_path
+# clinic_list = [x for x in entries_path.iterdir() if x.is_dir()]
+# match = [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]
 
-# Get list of all directories in entries_path, then get the last directory in each path,
-# which is the date, which becomes the label and value for the dropdown
-[{"label": i, "value": i} for i in [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]]
+# # Get list of all directories in entries_path, then get the last directory in each path,
+# # which is the date, which becomes the label and value for the dropdown
+# [{"label": i, "value": i} for i in [re.search(r"/([^/]+)$", str(date)).group(1) for date in entries_path.iterdir() if date.is_dir()]]
+
+# # Example dictionary
+# dictdict = {'Entry': 'This is a test entry. I am testing the journal imager app. I hope it works.',
+#             'Date': '2021-03-01',}
