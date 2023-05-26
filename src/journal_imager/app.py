@@ -29,11 +29,11 @@ today_entries_dir.mkdir(exist_ok=True)
 # App layout
 app.layout = html.Div(
     id = "app_container",
-    style = {'display': 'flex', 'flex-direction': 'column', 'height': '100vh', 'margin': '10px'},
+    style = {'display': 'flex', 'flex-direction': 'column', 'height': '100vh', 'padding': '10px', 'font-family': 'Arial, sans-serif', 'background-color': 'white'},
     children = [
         html.Div(
             id = "banner",
-            style = {'height': '10%', 'width': '100%', 'display': 'flex', 'justify-content': 'flex-start'},
+            style = {'height': '10%', 'width': '100%', 'display': 'flex', 'justify-content': 'flex-start', 'background-color': '#f2f2f2'},
             children = [
                 html.Img(
                     src = app.get_asset_url("uva_logo.png"),
@@ -47,7 +47,7 @@ app.layout = html.Div(
         ),
         html.Div(
             id = "body_container",
-            style={'display': 'flex', 'flex-direction': 'row', 'height': '90%'},
+            style={'display': 'flex', 'flex-direction': 'row', 'height': '90%', 'background-color': 'white'},
             children=[
                 html.Div(
                     id = "left_column",
@@ -113,6 +113,7 @@ app.layout = html.Div(
                             id = 'entries_table',
                             style_data={'whiteSpace': 'normal', 'height': 'auto'},
                             style_cell={'textAlign': 'left'},
+                            style_as_list_view=True,
                         ),
                         html.Img(
                             id = "gen_image",
@@ -164,7 +165,7 @@ def button_on_off(date_select):
     Output(component_id='gen_image', component_property='src'),
     [
     Input(component_id='generate_button', component_property='n_clicks'),
-    Input(component_id='entries_table', component_property='data')
+    State(component_id='entries_table', component_property='data')
     ]
 )
 def generate_image(n_clicks, entries_table):
