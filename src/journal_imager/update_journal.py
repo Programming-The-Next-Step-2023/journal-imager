@@ -27,28 +27,28 @@ def update_journal(input_text, entries_path):
     current_time = datetime.now().strftime('%H:%M:%S')
 
     # Initialize empty dataframe
-    df = pd.DataFrame(columns=['time', 'entry'])
+    df = pd.DataFrame(columns=['Time', 'Entry'])
 
     # Read in today's entries
     try:
         df = pd.read_csv(today_entries)
     except FileNotFoundError:
-        df = pd.DataFrame({'time': current_time, 'entry': "No entries yet - add your first entry for today!"}, index=[0])
+        df = pd.DataFrame({'Time': current_time, 'Entry': "No entries yet - add your first entry for today!"}, index=[0])
 
     # Check if input text is empty
     if input_text is None or len(input_text) < 1:  # Check for empty input
         return df.to_dict('records')
 
     # Check if input text is the same as the last entry
-    if input_text == df['entry'].iloc[-1]:
+    if input_text == df['Entry'].iloc[-1]:
         return df.to_dict('records')
 
     # Write to journal entries file
     try:
         df = pd.read_csv(today_entries)
-        df.loc[len(df)] = {'time': current_time, 'entry': input_text}
+        df.loc[len(df)] = {'Time': current_time, 'Entry': input_text}
     except FileNotFoundError:
-        df = pd.DataFrame({'time': current_time, 'entry': input_text}, index=[0])
+        df = pd.DataFrame({'Time': current_time, 'Entry': input_text}, index=[0])
     finally:
         df.to_csv(today_entries, index=False)
 

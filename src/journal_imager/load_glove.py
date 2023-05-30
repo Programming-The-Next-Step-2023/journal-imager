@@ -18,7 +18,7 @@ def load_glove():
         None
 
     Returns:
-        gensim.models.keyedvectors.Word2VecKeyedVectors: GloVe embeddings.
+        gensim.models.keyedvectors.Word2VecKeyedVectors: embedding structure that contains keys (i.e., words) and their corresponding GloVe embeddings.
     """
 
     # Get path to GloVe embeddings
@@ -26,7 +26,7 @@ def load_glove():
     
     # Check if GloVe embeddings are already downloaded
     if not glove_path.exists():
-        warnings.warn('GloVe embeddings not found. Downloading...')
+        print('GloVe embeddings not found. Downloading...')
         
         # Provide the url to the GloVe embeddings
         url = 'http://nlp.stanford.edu/data/glove.6B.zip'
@@ -39,18 +39,22 @@ def load_glove():
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(glove_path)
 
-        # delete all files except 50d
-        #
+        # Delete all files except 50d
+        glove_path.joinpath('glove.6B.100d.txt').unlink()
+        glove_path.joinpath('glove.6B.200d.txt').unlink()
+        glove_path.joinpath('glove.6B.300d.txt').unlink()
+        
+
     else:
-        warnings.warn('GloVe embeddings found.')
+        print('GloVe embeddings found.')
 
     # Check if GloVe embeddings are already converted to Word2Vec format
     word2vec_output_file = glove_path.parent / (glove_path.name + '.word2vec')
     if not word2vec_output_file.exists():
         # Convert GloVe .txt file to Word2Vec file format
-        warnings.warn('Converting GloVe embeddings to Word2Vec format...')      
+        print('Converting GloVe embeddings to Word2Vec format...')      
         glove2word2vec(glove_path / "glove.6B.50d.txt", word2vec_output_file)
     else:
-        warnings.warn('GloVe embeddings already in Word2Vec format.')
+        print('GloVe embeddings already in Word2Vec format.')
 
     return KeyedVectors.load_word2vec_format(word2vec_output_file, binary=False)
