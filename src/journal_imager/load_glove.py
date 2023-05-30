@@ -1,7 +1,6 @@
 import requests
 import zipfile
 import io
-import warnings
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.models import KeyedVectors
 from pathlib import Path
@@ -22,8 +21,8 @@ def load_glove():
     """
 
     # Get path to GloVe embeddings
-    glove_path = Path(__file__).parent / "glove.6B"
-    
+    glove_path = Path(__file__).parent / "assets/glove.6B"
+
     # Check if GloVe embeddings are already downloaded
     if not glove_path.exists():
         print('GloVe embeddings not found. Downloading...')
@@ -39,17 +38,16 @@ def load_glove():
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(glove_path)
 
-        # Delete all files except 50d
-        glove_path.joinpath('glove.6B.100d.txt').unlink()
-        glove_path.joinpath('glove.6B.200d.txt').unlink()
-        glove_path.joinpath('glove.6B.300d.txt').unlink()
-        
+        # Delete all files in the GloVe directory except 50d
+        for file in glove_path.iterdir():
+            if file.name != 'glove.6B.50d.txt':
+                file.unlink()
 
     else:
         print('GloVe embeddings found.')
 
     # Check if GloVe embeddings are already converted to Word2Vec format
-    word2vec_output_file = glove_path.parent / (glove_path.name + '.word2vec')
+    word2vec_output_file = glove_path / (glove_path.name + '.word2vec')
     if not word2vec_output_file.exists():
         # Convert GloVe .txt file to Word2Vec file format
         print('Converting GloVe embeddings to Word2Vec format...')      
