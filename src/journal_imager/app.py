@@ -2,9 +2,8 @@
 import pandas as pd
 import warnings
 import re
-import time
 
-from dash import Dash, html, dcc, callback, Input, Output, State, dash_table
+from dash import Dash, html, dcc, callback, Input, Output, State, dash_table, callback_context
 from datetime import datetime
 from pathlib import Path
 from natsort import natsorted
@@ -22,6 +21,12 @@ app = Dash(__name__)
 base_path = Path(__file__).parent
 entries_path = base_path / 'journal_entries'
 entries_path.mkdir(exist_ok=True)
+
+# Create today's entries directory
+current_date = datetime.now().strftime('%Y-%m-%d')
+today_entries_dir = entries_path / current_date
+today_entries_dir.mkdir(exist_ok=True)
+
 
 # App layout
 app.layout = html.Div(
@@ -41,9 +46,13 @@ app.layout = html.Div(
                 'height': '10%',
                 'width': '100%',
                 'display': 'flex',
-                'justify-content':
-                'flex-start',
-                'background-color': '#f2f2f2'
+                'align-items': 'center',
+                'text-align': 'left',
+                'justify-content': 'flex-start',
+                'background-color': '#f2f2f2',
+                'border-radius': '15px',
+                'box-shadow': '0px 0px 5px 0px rgba(0,0,1,0.1)',
+                'padding': '10px'
             },
             children = [
                 html.Img(
@@ -63,12 +72,13 @@ app.layout = html.Div(
                 )
             ]
         ),
+        html.Br(),
         html.Div(
             id = "body_container",
             style={
                 'display': 'flex',
                 'flex-direction': 'row',
-                'height': '90%',
+                # 'height': '90%',
                 'background-color': 'white'
             },
             children=[
@@ -76,7 +86,10 @@ app.layout = html.Div(
                     id = "left_column",
                     style={
                         'width': '30%',
-                        'margin-right': '10px'
+                        'margin-right': '10px',
+                        'border-radius': '15px',
+                        'box-shadow': '0px 0px 5px 0px rgba(0,0,1,0.1)',
+                        'padding': '10px'
                     },
                     children = [
                         html.Div(
@@ -137,6 +150,25 @@ app.layout = html.Div(
                                               5. Wait for the image to load.
                                               6. Repeat steps 3-5 as desired.'''),
                                 html.H4("Image Controls"),
+                                html.Div(
+                                    id = "image_style_container",
+                                    children = [
+                                        dcc.Dropdown(
+                                            id = "image_style",
+                                            options = [
+                                                {"label": "Normal", "value": "photo of "},
+                                                {"label": "HQ Render", "value": "octane render of "},
+                                                {"label": "Impressionist", "value": "impressionist painting of "},
+                                                {"label": "Whacky", "value": "whacky cartoon art of "},
+                                                {"label": "Abstract", "value": "abstract art of "},
+                                                {"label": "Surreal", "value": "surrealist art of "},
+                                            ],
+                                            value = "photo of ",
+                                            clearable = False
+                                        )
+                                    ],
+                                    style={'width':'30%'}
+                                ),
                                 html.P("Number of Images:"),
                                 dcc.Slider(
                                     id = "n_images",
@@ -198,6 +230,7 @@ app.layout = html.Div(
                                 html.Button(
                                     id = "generate_button",
                                     children = "Generate",
+                                    disabled=True
                                 ),
                                 html.Br()                                
                             ]
@@ -212,9 +245,14 @@ app.layout = html.Div(
                     children = [
                         dash_table.DataTable(
                             id = 'entries_table',
+                            style_table={
+                                'border-radius': '15px',
+                                'box-shadow': '0px 0px 5px 0px rgba(0,0,1,0.1)',
+                                'padding': '10px'
+                            },
                             style_header={
                                 'fontWeight': 'bold',
-                                'backgroundColor': '#f2f2f2',
+                                'backgroundColor': 'white'
                             },
                             style_data={
                                 'whiteSpace': 'normal',
@@ -224,10 +262,12 @@ app.layout = html.Div(
                                 'textAlign': 'left',
                                 'font-family': 'Arial, sans-serif',
                                 'backgroundColor': 'white',
-                                'color': 'black',
-                                'border': '0px'
+                                'border': '0px',
+                                'padding': '5px'
                             },
                             style_as_list_view = True,
+                            editable=True,
+                            row_deletable=True,
                         ),
                         html.Br(),
                         html.Div(
@@ -237,7 +277,8 @@ app.layout = html.Div(
                     ]
                 )
             ]
-        )
+        ),
+        html.Br()
     ]
 )
 
@@ -261,19 +302,53 @@ def update_journal(input_text, date_select, entries_path = entries_path):
 
     return entries_dict, '' # Return today's entries and clear input box
 
+# Delete entry
+@callback(
+        Output(component_id='generate_button', component_property='children'),
+        Input(component_id='entries_table', component_property='data'),
+        State(component_id='date_select', component_property='value')
+)
+def delete_entry(entries_dict, date_select):
+
+    # Convert to dataframe
+    entries = pd.DataFrame.from_records(entries_dict)
+
+    # Get path to entries.csv
+    date_entries = entries_path / date_select / 'entries.csv'
+
+    # Delete entry
+    if not entries.empty:
+        if entries['Entry'][0] == "No entries yet - add your first entry for today!":
+            entries = entries.iloc[1:] # Delete default entry
+            return "Generate"
+        # Save to csv
+        entries.to_csv(date_entries, index=False)
+
+    return "Generate"
 
 # Disable input box if date is not today
 @callback(
     Output(component_id='entry_inputter', component_property='hidden'),
     Input(component_id='date_select', component_property='value')
 )
-def button_on_off(date_select):
+def box_on_off(date_select):
     if date_select == datetime.now().strftime('%Y-%m-%d'):
         warnings.warn("ENABLED")
         return False
     else:
         warnings.warn("DISABLED")
         return True
+    
+# Disable generate button if no ngrok URL is entered
+@callback(
+    Output(component_id='generate_button', component_property='disabled'),
+    Input(component_id='ngrok_url', component_property='value')
+)
+def button_on_off(ngrok_url):
+    if ngrok_url == '' or ngrok_url == None:
+        return True
+    else:
+        return False
 
 # Generate image
 @callback(
@@ -286,10 +361,11 @@ def button_on_off(date_select):
     State(component_id='n_images', component_property='value'),
     State(component_id='guidance_scale', component_property='value'),
     State(component_id='num_inference_steps', component_property='value'),
-    State(component_id='ngrok_url', component_property='value')
+    State(component_id='ngrok_url', component_property='value'),
+    State(component_id='image_style', component_property='value')
     ]
 )
-def generate_image(date_select, n_clicks, entries_table, n_images, guidance_scale, num_inference_steps, ngrok_url):
+def generate_image(date_select, n_clicks, entries_table, n_images, guidance_scale, num_inference_steps, ngrok_url, image_style):
     
     # Create directory for images
     img_dir = base_path / "assets/gen_images" / date_select
@@ -311,8 +387,16 @@ def generate_image(date_select, n_clicks, entries_table, n_images, guidance_scal
                     'type': 'gen_image',
                     'index': idx
                 },
-                src = re.search(r"\/assets\/.*", str(image_path)).group(0) ,
-                style= {'display':'inline-block', 'float':'left', 'maxHeight':'33%', 'maxWidth':'33%'}
+                src = re.search(r"\/assets\/.*", str(image_path)).group(0),
+                style= {
+                    'display':'inline-block',
+                    'float':'center',
+                    'maxHeight':'33%',
+                    'maxWidth':'33%',
+                    'padding':'1.5px',
+                    'boxShadow':'0 0 5px 0 rgba(0, 0, 1, 0.1)',
+                    'borderRadius':'15px'
+                    }
             )
             for idx, image_path in enumerate(img_files)
         ]
@@ -340,15 +424,16 @@ def generate_image(date_select, n_clicks, entries_table, n_images, guidance_scal
     # Delete any existing images
     for img_file in img_dir.glob("*.png"):
         img_file.unlink()
+
     
     # Generate new images
     for image in range(n_images):
         # Generate image
         print("Generating image " + str(image))
         gi.generate_image(ngrok_url,
-                          most_salient_triples[image][0],
+                          image_style + ', '.join(most_salient_triples[image]),
                           guidance_scale,
-                          num_inference_steps,
+                          int(round(num_inference_steps)),
                           img_path = img_dir / f"image_{image+1}_{datetime.now().strftime('%H-%M-%S')}.png"
         )
     

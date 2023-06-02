@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "journal_imager"
-version = "0.0.2"
+version = "0.1.0"
 authors = [
   { name="Konrad Mikalauskas", email="konradas.mikalauskas@student.uva.nl" },
 ]
-description = "A Python-based journaling app that uses NLP techniques to evaluate users' inputs and generate 'summary images' using a generative AI model."
+description = "A Python-based journaling app that allows users to record daily journal entries and generate unique images based on these entries."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [

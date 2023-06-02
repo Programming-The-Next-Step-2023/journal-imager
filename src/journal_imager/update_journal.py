@@ -40,7 +40,7 @@ def update_journal(input_text, entries_path):
         return df.to_dict('records')
 
     # Check if input text is the same as the last entry
-    if input_text == df['Entry'].iloc[-1]:
+    if input_text == df['Entry'].iloc[-1] and len(df) > 1:
         return df.to_dict('records')
 
     # Write to journal entries file
