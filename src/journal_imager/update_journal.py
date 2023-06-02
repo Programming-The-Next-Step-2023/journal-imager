@@ -2,7 +2,6 @@ import pandas as pd
 
 from pathlib import Path
 from datetime import datetime
-import warnings
 
 def update_journal(input_text, entries_path):
     """ Update journal entries with input text.
@@ -14,8 +13,6 @@ def update_journal(input_text, entries_path):
     Returns:
         dict: Dictionary of today's entries.
     """
-    
-    warnings.warn('update journal')
 
     # Get today's date to organize entries
     current_date = datetime.now().strftime('%Y-%m-%d')

@@ -1,6 +1,5 @@
 # Import packages
 import pandas as pd
-import warnings
 import re
 
 from dash import Dash, html, dcc, callback, Input, Output, State, dash_table, callback_context
@@ -333,10 +332,8 @@ def delete_entry(entries_dict, date_select):
 )
 def box_on_off(date_select):
     if date_select == datetime.now().strftime('%Y-%m-%d'):
-        warnings.warn("ENABLED")
         return False
     else:
-        warnings.warn("DISABLED")
         return True
     
 # Disable generate button if no ngrok URL is entered
